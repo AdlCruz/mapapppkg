@@ -8,9 +8,28 @@ app_ui <- function(request) {
   tagList(
     # Leave this function for adding external resources
     golem_add_external_resources(),
-    # Your application UI logic
-    fluidPage(
-      h1("mapapppkg")
+    # for special javascript calls
+    shinyjs::useShinyjs(),
+    # APP UI LOGIC
+    navbarPage(
+      title="Health Impact Projections",
+      # MAP #
+      tabPanel(
+        "Map",
+        fluidRow(
+          column(3,
+                 wellPanel(mod_inputs_ui_1("inputsMAP_L"))
+          ),
+          column(6,
+                 fluidRow(
+                   mod_map_ui("map")
+                   )
+          ),
+          column(3,
+                 wellPanel(mod_inputs_ui_2("inputsMAP_R"))
+          )
+        )
+      )
     )
   )
 }
