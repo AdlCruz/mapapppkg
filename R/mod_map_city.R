@@ -91,7 +91,11 @@ mod_map_city_server <- function(id, data, spatres, varname, temp){
 
         } else if (vnm == "an") {
 
+          print(varval)
+          print(unique(varval))
+
           pal <- colorQuantile(palette = palcol, domain = varval, probs = seq(0, 1, .2), na.color = "transparent")
+          print(pal(unique(varval)))
           pal_colors <- unique(pal(sort(varval))) # hex codes
           pal_labs <- round(quantile(varval, seq(0, 1, .2)),0) # depends on n from pal
           pal_labs <- paste(dplyr::lag(pal_labs), pal_labs, sep = " - ")[-1] # first lag is NA
