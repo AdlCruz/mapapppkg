@@ -72,36 +72,13 @@ mod_map_region_server <- function(id, data, spatres, varname, temp){
           palcol= "viridis"
         }
 
-        # unique data values
-        uvln <- length(unique(varval))
+        # PALETTE - COLORS - LABELS SET WITH UTILITY FUNCTION - CHECK IT OUT IF YOU DARE
+        # I HAVE NOT BEEN ABLE TO BREAK IT WHILE USING THE APP
+        map_pal_items <- utils_get_set_pal(varval, vnm, palcol, qmax=5, bmax=7, factbin=6)
 
-        if (uvln <= 8) {
-          pal <- colorFactor(palette = palcol, domain = as.factor(varval), na.color = "transparent")
-          pal_colors <- unique(pal(sort(varval))) # hex codes
-          pal_labs <- paste(sort(round(unique(varval),2))) # first lag is NA
-
-        } else if (vnm == "an") {
-
-          print(varval)
-          print(unique(varval))
-
-          pal <- colorQuantile(palette = palcol, domain = varval, probs = seq(0, 1, .2), na.color = "transparent")
-
-          print(pal(unique(varval)))
-          pal_colors <- unique(pal(sort(varval))) # hex codes
-          pal_labs <- round(quantile(varval, seq(0, 1, .2)),0) # depends on n from pal
-          pal_labs <- paste(dplyr::lag(pal_labs), pal_labs, sep = " - ")[-1] # first lag is NA
-
-        } else {
-          pal <- leaflet::colorBin(palette = palcol, varval, bins = 7, na.color = "transparent")
-          pal_colors <- unique(pal(sort(varval))) # hex codes
-          pal_labs <- levels(
-            cut(x=varval,breaks=length(pal_colors),  include.lowest=FALSE, right=FALSE)
-          )
-          brkpts <- paste0(gsub("\\[|\\]|\\(|\\)", "", pal_labs),collapse=",") %>%
-            strsplit(.,",") %>% unlist() %>% unique(.)
-          pal_labs <- paste(dplyr::lag(brkpts),brkpts,sep = " - ")[-1]
-        }
+        pal <- map_pal_items$pal
+        pal_colors <- map_pal_items$colors
+        pal_labs <- map_pal_items$labs
 
         # create update polygons
         if (!is.null(rv$polygonsr)) {
@@ -146,6 +123,19 @@ mod_map_region_server <- function(id, data, spatres, varname, temp){
         }
       }
     })
+
+    observe({
+
+          data <- data()
+          filtered_datasf <- sf::st_as_sf(data)
+          fcoords <- sf::st_coordinates(filtered_datasf)
+          bbox1 <- c(range(fcoords[,"X"]),range(fcoords[,"Y"]))
+          flyt <- c(bbox1[1],bbox1[3],bbox1[2],bbox1[4])
+
+          leafletProxy("map") %>%
+            flyToBounds(lng1 = flyt[1], lat1 = flyt[2], lng2 = flyt[3], lat2 = flyt[4])
+
+      }) %>% bindEvent(req(spatres()=="Region"))
   })
 }
 

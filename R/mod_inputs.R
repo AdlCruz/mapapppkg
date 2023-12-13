@@ -30,11 +30,11 @@ mod_inputs_server_1 <- function(id) {
     })
 
     observe({
-      if (input$spatres!="Region"){
-        return()
+      if (input$spatres=="Region"){
+        updateSelectizeInput(session,"location", selected= "All", choices = country_opts)
       }
-      else if (input$spatres=="Region") {
-        updateSelectizeInput(session,"location", choices = "NA", selected= "NA")
+      else if (input$spatres!="Region") {
+        return()
       }
     })
 
@@ -56,17 +56,17 @@ mod_inputs_server_2 <- function(id) {
   moduleServer(id, function(input, output, session){
 
     # Reactive value to store previous selections
-    print("before prev_selection 1st def")
+    
     prev_selection <- reactiveVal(c("Spain"),label="loc_select")
-    print("after prev_selection")
+    
 
     # FROM ONE COUNTRY TO ALL OR vv - BUG DOUBLE RENDER MAYBE FROM HERE
     observe({
 
       # Current selection
       curr_selection <- isolate( input$location )
-      print("as input and curr selection")
-      print(input$location)
+      
+      
       # If "All" is newly selected AND wasn't in the previous selection
       if ("All" %in% curr_selection && !"All" %in% isolate(prev_selection())) {
         set <- c("All")

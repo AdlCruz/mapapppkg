@@ -1,5 +1,5 @@
 Package: mapapppkg
-Title: An Amazing Shiny App
+Title: Interactive Visualisation of Health Impact Pro
 Version: 0.0.0.9000
 Authors@R: 
     person("firstname", "lastname", , "your@email.com", role = c("aut", "cre"))
@@ -10,15 +10,20 @@ Depends:
 Imports: 
     arrow,
     config (>= 0.3.2),
+    data.table,
     dplyr,
+    DT,
     golem (>= 0.4.1),
     htmltools,
     leaflet,
-    pkgload,
+    rlang,
+    sf,
     sfarrow,
     shiny (>= 1.8.0),
     shinyjs,
-    shinyWidgets
+    shinyWidgets,
+    stats,
+    tidyr
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US

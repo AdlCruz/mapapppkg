@@ -9,7 +9,7 @@ mod_map_city_server <- function(id, data, spatres, varname, temp){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
-    # RVS MARKERS POLYGONS SHOWN LOCATIONS
+    # RVS MARKERS SHOWN LOCATIONS
     rv <- reactiveValues(lastCityCount = 0, markers = NULL)
 
     fillOp_marker <- 0.6
@@ -27,7 +27,6 @@ mod_map_city_server <- function(id, data, spatres, varname, temp){
 
     # OBS FOR IF NO-DATA
     observe({
-
       if (nrow(data()) == 0) {
         leafletProxy("map") %>%
           clearMarkers() %>%
@@ -58,11 +57,9 @@ mod_map_city_server <- function(id, data, spatres, varname, temp){
         varval <- data[[vnm]]
 
         # SET RADIUS
-        #radius <- log(varval)
-        # radius <- sqrt(varval)
         radius <- ~ifelse(input$map_zoom >= 7, 20+log(AREA_KM2), log(AREA_KM2))
 
-        # SET LEGEND
+        # SET LEGEND TITLE
         outcome_tag <- ifelse(vnm=="af","Excess fraction of deaths", # A.F
                               ifelse(vnm=="an","Excess deaths", # A.N
                                      ifelse(vnm=="rate","Excess mortality rate", NA)))
@@ -73,6 +70,7 @@ mod_map_city_server <- function(id, data, spatres, varname, temp){
         tempr <- temp()
 
         # conditional palette
+        # for red and blues the max colours in 9 - viridis im not sure
         if (tempr == "heat") {
           palcol = "Reds"
         } else if (tempr == "cold") {
@@ -81,38 +79,13 @@ mod_map_city_server <- function(id, data, spatres, varname, temp){
           palcol= "viridis"
         }
 
-        # unique data values
-        uvln <- length(unique(varval))
+        # PALETTE - COLORS - LABELS SET WITH UTILITY FUNCTION - CHECK IT OUT IF YOU DARE
+        # I HAVE NOT BEEN ABLE TO BREAK IT WHILE USING THE APP
+        map_pal_items <- utils_get_set_pal(varval, vnm, palcol, qmax=5, bmax=7, factbin=6)
 
-        if (uvln <= 8) {
-          pal <- colorFactor(palette = palcol, domain = as.factor(varval), na.color = "transparent")
-          pal_colors <- unique(pal(sort(varval))) # hex codes
-          pal_labs <- paste(sort(round(unique(varval),2))) # first lag is NA
-
-        } else if (vnm == "an") {
-
-          print(varval)
-          print(unique(varval))
-          print(.bincode(varval))
-          print(quantile(varval))
-
-          pal <- colorQuantile(palette = palcol, domain = varval, probs = seq(0, 1, .2), na.color = "transparent")
-
-          print(pal(unique(varval)))
-          pal_colors <- unique(pal(sort(varval))) # hex codes
-          pal_labs <- round(quantile(varval, seq(0, 1, .2)),0) # depends on n from pal
-          pal_labs <- paste(dplyr::lag(pal_labs), pal_labs, sep = " - ")[-1] # first lag is NA
-
-        } else {
-          pal <- leaflet::colorBin(palette = palcol, varval, bins = 7, na.color = "transparent")
-          pal_colors <- unique(pal(sort(varval))) # hex codes
-          pal_labs <- levels(
-            cut(x=varval,breaks=length(pal_colors),  include.lowest=FALSE, right=FALSE)
-          )
-          brkpts <- paste0(gsub("\\[|\\]|\\(|\\)", "", pal_labs),collapse=",") %>%
-            strsplit(.,",") %>% unlist() %>% unique(.)
-          pal_labs <- paste(dplyr::lag(brkpts),brkpts,sep = " - ")[-1]
-        }
+        pal <- map_pal_items$pal
+        pal_colors <- map_pal_items$colors
+        pal_labs <- map_pal_items$labs
 
         # create OR update markers
         if (!is.null(rv$markers)) {
@@ -140,12 +113,10 @@ mod_map_city_server <- function(id, data, spatres, varname, temp){
             ) %>% clearControls() %>%
             addLegend(
               position="bottomleft",
-              colors = pal_colors, labels = pal_labs, opacity = 1,
+              colors = pal_colors,
+              labels = pal_labs,
+              opacity = 1,
               title = legTitle
-              #pal=pal,
-              #values = varval, #if (varname == "an") q_breaks else var,
-              #,
-              #labFormat = labFormatFunction
             )
         } else {
           # initial launch
@@ -160,6 +131,38 @@ mod_map_city_server <- function(id, data, spatres, varname, temp){
         }
       }
     })
+
+    # SET MAP VIEW WITH BOUNDING BOXES - MUST BE SEPARATE FROM REACTIVE ZOOM CALL OTHERWISE INF- LOOP
+    observe({
+      req(spatres()=="City")
+
+      data <- data()
+
+      if (nrow(data) == 0) {rv$lastCityCount <- 0; return()}
+
+      # Ensure counts are numeric and not NA
+      currentCityCount <- if(isolate(spatres()) == "City") {
+        sum(!is.na(unique(data$city_name)))
+      } else {
+        0
+      }
+
+      # Check if count have changed
+      if (is.numeric(currentCityCount) && (!identical(currentCityCount, rv$lastCityCount))) {
+
+        if (isolate(spatres())=="City") {
+
+          bbox <- c(range(data$longitude), range(data$latitude))
+          flyt <- c(bbox[1], bbox[3], bbox[2], bbox[4])
+
+          leafletProxy("map") %>%
+            flyToBounds(lng1 = flyt[1], lat1 = flyt[2], lng2 = flyt[3], lat2 = flyt[4])}
+
+        # Update the last state
+        rv$lastCityCount <- currentCityCount
+      }
+    })
+
   })
 }
 

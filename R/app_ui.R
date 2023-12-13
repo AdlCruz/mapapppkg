@@ -29,6 +29,33 @@ app_ui <- function(request) {
                  wellPanel(mod_inputs_ui_2("inputsMAP_R"))
           )
         )
+      ),
+      # RANK #
+      tabPanel(
+        "Rank",
+        fluidRow(
+          column(3,
+                 tagList(wellPanel(mod_inputs_ui_1("inputsRANK_L")),
+                         wellPanel(mod_inputs_ui_2("inputsRANK_R")))
+          ),
+          column(9,
+                 mod_rank_ui("rank")
+          )
+        )
+      ),
+      # # ALL DATA #
+      tabPanel(
+        "All data",
+        wellPanel(id="dtwell", mod_DT_inputs_ui("inputsDT_UI")),
+        mod_DT_ui("dt")
+      ),
+      # ABOUT #
+      tabPanel(
+        "About/Help/?",
+        fluidRow(
+          column(8,offset=2,
+                 wellPanel(htmltools::includeMarkdown("inst/app/www/about.md")))
+        )
       )
     )
   )
@@ -49,12 +76,13 @@ golem_add_external_resources <- function() {
   )
 
   tags$head(
-    favicon(),
+    favicon(ext="png"),
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "mapapppkg"
-    )
+    )#,shiny::tags$link(rel = "stylesheet", type = "text/css", href = "css/styles.css")
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()
+    # UNCOMMENT FOR CSS STYLING
   )
 }

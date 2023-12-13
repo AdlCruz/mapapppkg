@@ -10,7 +10,7 @@ utils_filter_data <- function(conn, datamode, spatres,
                               locations) {
 
   query <- conn
-  #print(query)
+  #
   # DATA TYPE
   if (datamode=="Period"){
 
@@ -37,10 +37,10 @@ utils_filter_data <- function(conn, datamode, spatres,
 
   } else {
 
-    #print("filter locations")
+    #
     pattern <- paste(locations, collapse = "|")
-    # print("as pattern")
-    # print(pattern)
+    # 
+    # 
     query %>% dplyr::filter(base::grepl(pattern, country_name))
 
   }

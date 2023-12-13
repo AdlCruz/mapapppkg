@@ -1,0 +1,99 @@
+
+/* App background color */
+body {
+      background-color: #5960c7; /* fe3 Light blue */
+      color: white;
+}
+
+/* Navbar styling */
+.navbar {
+    background-color: #3038B9; /* Dark blue */
+    padding: 5px; /* Add padding for better spacing */
+    border: 0;
+    margin-bottom: 15px;
+    color: white;
+}
+
+.navbar .navbar-brand {
+    width: auto; /* Give it automatic width so it doesn't take the full width */
+    color: white; /* White color for the title text */
+    font-size: 24px;
+    padding-right: 20px; /* Some spacing between title and tabs */
+    }
+
+
+.navbar .navbar-nav {
+    font-size: 18px; /* Adjust the font size for tab names */
+}
+
+.navbar .navbar-nav > li > a {
+    color: white; /* Making the tab names color white for better contrast */
+}
+
+/* Remove hover effects */
+.navbar .navbar-brand:hover, .navbar .navbar-nav > li > a:hover {
+    background-color: transparent; /* Remove any background color change on hover */
+    color: white; /* Ensure font color remains white on hover */
+}
+
+/* Round the corners of Leaflet maps */
+.leaflet-container {
+  justify-content: center;
+  margin-top: 10px; /* Add a 10-pixel margin-top to displace the container */
+  padding: 15px;
+  border-radius: 20px; /* Adjust the radius as needed */
+  box-shadow: 11px 11px 10px rgba(0, 0, 0, 0.3); /* Adjust shadow values as needed */
+  overflow: hidden;
+}
+
+
+#dt-dld {
+  justify-content: center;
+}
+
+tbody {
+  color: white;
+  }
+
+.dataTables_length {
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
+/* Needed to make amount of rows visible selected, visible */
+.dataTables_length select[name='DataTables_Table_0_length'] {
+  color: black;
+}
+
+.dataTables_length select[name='DataTables_Table_1_length'] {
+  color: black;
+}
+
+.dataTables_wrapper {
+  color:white;
+}
+
+/* Add box shadow to panels or cards */
+.well {
+  justify-content: center;
+  width: 90%; /* Set your desired width here */
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  margin-bottom: 5px;
+  background-color: #333333;
+  border-color: #474747;
+  color: white;
+}
+
+
+#dtwell {
+  width:100%;
+}
+
+#mapwell {
+  height: 100%;
+}
+
+
+
+

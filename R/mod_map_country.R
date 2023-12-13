@@ -5,12 +5,12 @@ mod_map_country_server <- function(id, data, spatres, varname, temp){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
-    # RVS MARKERS POLYGONS SHOWN LOCATIONS
+    # RVS MARKERS SHOWN LOCATIONS
     rv <- reactiveValues(lastCountryCount = 0, polygonsc = NULL)
 
-    fillOp_poly <- 0.5
+    fillOp_poly <- 0.4
 
-    # FIRST TWO SECTIONS CAN BE COPY PASTED IN COUNTRY AND REGION
+    # FNEXT TWO SECTIONS CAN BE COPY PASTED IN COUNTRY AND REGION
 
     # MINIMUM VIABLE MAP
     output$map <- leaflet::renderLeaflet({
@@ -23,7 +23,6 @@ mod_map_country_server <- function(id, data, spatres, varname, temp){
 
     # OBS FOR IF NO-DATA
     observe({
-
       if (nrow(data()) == 0) {
         leafletProxy("map") %>%
           clearMarkers() %>%
@@ -40,7 +39,7 @@ mod_map_country_server <- function(id, data, spatres, varname, temp){
       }
     })
 
-    # OBS FOR MARKER DRAWING AND FILLING AND LEGEND AND PALETTE BUILDING AND TITLING
+    # OBS FOR POLYGON DRAWING AND FILLING AND LEGEND AND PALETTE BUILDING AND TITLING
     observe({
 
       # GET DATA
@@ -53,8 +52,7 @@ mod_map_country_server <- function(id, data, spatres, varname, temp){
         vnm <- varname()
         varval <- data[[vnm]]
 
-
-        # SET LEGEND
+        # SET LEGEND TITLE
         outcome_tag <- ifelse(vnm=="af","Excess fraction of deaths", # A.F
                               ifelse(vnm=="an","Excess deaths", # A.N
                                      ifelse(vnm=="rate","Excess mortality rate", NA)))
@@ -65,6 +63,7 @@ mod_map_country_server <- function(id, data, spatres, varname, temp){
         tempr <- temp()
 
         # conditional palette
+        # for red and blues the max colours in 9 - viridis im not sure
         if (tempr == "heat") {
           palcol = "Reds"
         } else if (tempr == "cold") {
@@ -73,36 +72,13 @@ mod_map_country_server <- function(id, data, spatres, varname, temp){
           palcol= "viridis"
         }
 
-        # unique data values
-        uvln <- length(unique(varval))
+        # PALETTE - COLORS - LABELS SET WITH UTILITY FUNCTION - CHECK IT OUT IF YOU DARE
+        # I HAVE NOT BEEN ABLE TO BREAK IT WHILE USING THE APP
+        map_pal_items <- utils_get_set_pal(varval, vnm, palcol, qmax=5, bmax=7, factbin=6)
 
-        if (uvln <= 8) {
-          pal <- colorFactor(palette = palcol, domain = as.factor(varval), na.color = "transparent")
-          pal_colors <- unique(pal(sort(varval))) # hex codes
-          pal_labs <- paste(sort(round(unique(varval),2))) # first lag is NA
-
-        } else if (vnm == "an") {
-
-          print(varval)
-          print(unique(varval))
-
-          pal <- colorQuantile(palette = palcol, domain = varval, probs = seq(0, 1, .2), na.color = "transparent")
-
-          print(pal(unique(varval)))
-          pal_colors <- unique(pal(sort(varval))) # hex codes
-          pal_labs <- round(quantile(varval, seq(0, 1, .2)),0) # depends on n from pal
-          pal_labs <- paste(dplyr::lag(pal_labs), pal_labs, sep = " - ")[-1] # first lag is NA
-
-        } else {
-          pal <- leaflet::colorBin(palette = palcol, varval, bins = 7, na.color = "transparent")
-          pal_colors <- unique(pal(sort(varval))) # hex codes
-          pal_labs <- levels(
-            cut(x=varval,breaks=length(pal_colors),  include.lowest=FALSE, right=FALSE)
-          )
-          brkpts <- paste0(gsub("\\[|\\]|\\(|\\)", "", pal_labs),collapse=",") %>%
-            strsplit(.,",") %>% unlist() %>% unique(.)
-          pal_labs <- paste(dplyr::lag(brkpts),brkpts,sep = " - ")[-1]
-        }
+        pal <- map_pal_items$pal
+        pal_colors <- map_pal_items$colors
+        pal_labs <- map_pal_items$labs
 
         # create update polygons
         if (!is.null(rv$polygonsc)) {
@@ -134,19 +110,52 @@ mod_map_country_server <- function(id, data, spatres, varname, temp){
         } else {
           # initial launch
           leafletProxy("map") %>%
-            clearMarkers()%>%
-            clearShapes()%>%
-            clearPopups()%>%
+            clearMarkers()%>%clearShapes()%>%clearPopups()%>%
             addPolygons(
               data = data,
-              fillColor = "blue",
-              fillOpacity = fillOp_poly,
               color = "darkgrey",
-              weight = 4
+              weight = 2,
+              fillOpacity = fillOp_poly,
+              fillColor = ~pal(varval)
             ) -> rv$polygonsc
         }
       }
     })
+
+    observe({
+      req(spatres()=="Country")
+
+      data <- data()
+
+      if (nrow(data) == 0) { rv$lastCountryCount <- 0; return() }
+
+      # Ensure counts are numeric and not NA
+      currentCountryCount <- if(isolate(spatres()) == "Country") {
+        sum(!is.na(unique(data$country_name)))
+      } else {
+        0
+      }
+
+      # Check if counts have changed
+      if (is.numeric(currentCountryCount) && (!identical(currentCountryCount, rv$lastCountryCount))) {
+
+        if(isolate(spatres()) == "Country") {
+
+          filtered_datasf <- sf::st_as_sf(data)
+          fcoords <- sf::st_coordinates(filtered_datasf)
+          bbox1 <- c(range(fcoords[,"X"]),range(fcoords[,"Y"]))
+          flyt <- c(bbox1[1],bbox1[3],bbox1[2],bbox1[4])
+
+          leafletProxy("map") %>%
+            flyToBounds(lng1 = flyt[1], lat1 = flyt[2], lng2 = flyt[3], lat2 = flyt[4])
+
+        }
+        # Update the last state
+        rv$lastCountryCount <- currentCountryCount
+      }
+
+    })
+
   })
 }
 
