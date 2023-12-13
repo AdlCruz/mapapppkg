@@ -3,6 +3,7 @@
 #' @param request Internal parameter for `{shiny}`.
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @import markdown
 #' @noRd
 app_ui <- function(request) {
   tagList(
@@ -79,7 +80,7 @@ golem_add_external_resources <- function() {
     favicon(ext="png"),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "mapapppkg"
+      app_title = "hipmapp"
     )#,shiny::tags$link(rel = "stylesheet", type = "text/css", href = "css/styles.css")
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()

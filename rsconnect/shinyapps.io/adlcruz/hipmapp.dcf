@@ -1,0 +1,10 @@
+name: hipmapp
+title: hipmapp
+username: adlcruz
+account: adlcruz
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 10793350
+bundleId: 8046276
+url: https://adlcruz.shinyapps.io/hipmapp/
+version: 1

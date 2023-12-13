@@ -17,6 +17,8 @@ Imports:
     golem (>= 0.4.1),
     htmltools,
     leaflet,
+    markdown,
+    pkgload,
     rlang,
     sf,
     sfarrow,

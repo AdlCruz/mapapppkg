@@ -3,6 +3,8 @@
 export(run_app)
 import(data.table)
 import(leaflet)
+import(markdown)
+import(pkgload)
 import(shiny)
 import(shiny, except=c(dataTableOutput, renderDataTable))
 importFrom(DT,JS)
