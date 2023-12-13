@@ -7,12 +7,13 @@
 #' @noRd
 #' @importFrom DT renderDT datatable JS
 #' @importFrom shiny NS tagList
+#' @importFrom data.table fwrite
 #'
 mod_DT_ui <- function(id){
   ns <- NS(id)
   tagList(
 
-    downloadButton(ns("dld"), "Raw Data Download (please allow up to a minute)"),
+    downloadButton(ns("dld"), "Raw Data Download (please allow a few seconds)"),
     DT::DTOutput(ns("dt"))
 
   )
@@ -39,7 +40,7 @@ mod_DT_server <- function(id, data, spatres, datamode){
         rename_columns(.)  %>%
         dplyr::select(which(sapply(., function(x) !all(is.na(x)))))
 
-      
+
 
       if (any(names(dtd)%in%c("geometry","geom"))) { dtd$geometry <- NULL }
 
@@ -73,7 +74,7 @@ mod_DT_server <- function(id, data, spatres, datamode){
         paste0(ifelse(datamode()=="Period","Period","Temp"),"_", spatres(), "_", Sys.Date(), ".csv")
       },
       content = function(file) {
-        write.csv(dldData(), file, row.names = FALSE)
+        data.table::fwrite(dldData(), file, row.names = FALSE)
       }
     )
   })

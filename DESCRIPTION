@@ -1,10 +1,11 @@
-Package: mapapppkg
-Title: Interactive Visualisation of Health Impact Pro
-Version: 0.0.0.9000
+Package: hipmapp
+Title: Health Impact Projections MApp
+Version: 0.0.1.0000
 Authors@R: 
-    person("firstname", "lastname", , "your@email.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-License: What license is it under?
+    person("Arturo", "de la Cruz Libardi", , "Arturo.de-la-Cruz-Libardi@lshtm.ac.uk", role = c("cre", "aut"))
+Description: Wraps Shiny App for Interactive Visualisation of Health
+    Impact Projections.
+License: MIT + file LICENSE
 Depends: 
     R (>= 2.10)
 Imports: 

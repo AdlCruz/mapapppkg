@@ -9,7 +9,7 @@
 #'
 #' @noRd
 app_sys <- function(...) {
-  system.file(..., package = "mapapppkg")
+  system.file(..., package = "hipmapp")
 }
 
 
