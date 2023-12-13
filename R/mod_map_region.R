@@ -53,11 +53,6 @@ mod_map_region_server <- function(id, data, spatres, varname, temp){
         vnm <- varname()
         varval <- data[[vnm]]
 
-        # SET RADIUS
-        radius <- log(varval)
-        # radius <- sqrt(varval)
-        # radius <- ~ifelse(input$map_zoom >= 7, 20+log(AREA_KM2), log(AREA_KM2))
-
         # SET LEGEND
         outcome_tag <- ifelse(vnm=="af","Excess fraction of deaths", # A.F
                               ifelse(vnm=="an","Excess deaths", # A.N
@@ -83,17 +78,21 @@ mod_map_region_server <- function(id, data, spatres, varname, temp){
         if (uvln <= 8) {
           pal <- colorFactor(palette = palcol, domain = as.factor(varval), na.color = "transparent")
           pal_colors <- unique(pal(sort(varval))) # hex codes
-          pal_labs <- paste(sort(unique(varval))) # first lag is NA
+          pal_labs <- paste(sort(round(unique(varval),2))) # first lag is NA
 
         } else if (vnm == "an") {
 
+          print(varval)
+          print(unique(varval))
+
           pal <- colorQuantile(palette = palcol, domain = varval, probs = seq(0, 1, .2), na.color = "transparent")
+
+          print(pal(unique(varval)))
           pal_colors <- unique(pal(sort(varval))) # hex codes
           pal_labs <- round(quantile(varval, seq(0, 1, .2)),0) # depends on n from pal
           pal_labs <- paste(dplyr::lag(pal_labs), pal_labs, sep = " - ")[-1] # first lag is NA
 
         } else {
-
           pal <- leaflet::colorBin(palette = palcol, varval, bins = 7, na.color = "transparent")
           pal_colors <- unique(pal(sort(varval))) # hex codes
           pal_labs <- levels(
@@ -102,7 +101,6 @@ mod_map_region_server <- function(id, data, spatres, varname, temp){
           brkpts <- paste0(gsub("\\[|\\]|\\(|\\)", "", pal_labs),collapse=",") %>%
             strsplit(.,",") %>% unlist() %>% unique(.)
           pal_labs <- paste(dplyr::lag(brkpts),brkpts,sep = " - ")[-1]
-
         }
 
         # create update polygons

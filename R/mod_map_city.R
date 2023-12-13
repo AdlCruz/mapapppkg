@@ -58,9 +58,9 @@ mod_map_city_server <- function(id, data, spatres, varname, temp){
         varval <- data[[vnm]]
 
         # SET RADIUS
-        radius <- log(varval)
+        #radius <- log(varval)
         # radius <- sqrt(varval)
-        # radius <- ~ifelse(input$map_zoom >= 7, 20+log(AREA_KM2), log(AREA_KM2))
+        radius <- ~ifelse(input$map_zoom >= 7, 20+log(AREA_KM2), log(AREA_KM2))
 
         # SET LEGEND
         outcome_tag <- ifelse(vnm=="af","Excess fraction of deaths", # A.F
@@ -93,8 +93,11 @@ mod_map_city_server <- function(id, data, spatres, varname, temp){
 
           print(varval)
           print(unique(varval))
+          print(.bincode(varval))
+          print(quantile(varval))
 
           pal <- colorQuantile(palette = palcol, domain = varval, probs = seq(0, 1, .2), na.color = "transparent")
+
           print(pal(unique(varval)))
           pal_colors <- unique(pal(sort(varval))) # hex codes
           pal_labs <- round(quantile(varval, seq(0, 1, .2)),0) # depends on n from pal
