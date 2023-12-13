@@ -87,7 +87,7 @@ mod_map_city_server <- function(id, data, spatres, varname, temp){
         if (uvln <= 8) {
           pal <- colorFactor(palette = palcol, domain = as.factor(varval), na.color = "transparent")
           pal_colors <- unique(pal(sort(varval))) # hex codes
-          pal_labs <- paste(sort(unique(varval))) # first lag is NA
+          pal_labs <- paste(sort(round(unique(varval),2))) # first lag is NA
 
         } else if (vnm == "an") {
 
