@@ -1,8 +1,11 @@
 
 #' map_city Server Functions
+#' @importFrom dplyr lag
+#' @importFrom stats quantile
+#'
 #'
 #' @noRd
-mod_map_city_server <- function(id, data, spatres, varname){
+mod_map_city_server <- function(id, data, spatres, varname, temp){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
@@ -11,7 +14,7 @@ mod_map_city_server <- function(id, data, spatres, varname){
 
     fillOp_marker <- 0.6
 
-    # FIRST TWO SECTIONS CAN BE COPY PASTED IN COUNTRY AND REGION
+      # FNEXT TWO SECTIONS CAN BE COPY PASTED IN COUNTRY AND REGION
 
     # MINIMUM VIABLE MAP
     output$map <- leaflet::renderLeaflet({
@@ -43,22 +46,66 @@ mod_map_city_server <- function(id, data, spatres, varname){
 
     # OBS FOR MARKER DRAWING AND FILLING AND LEGEND AND PALETTE BUILDING AND TITLING
     observe({
+
       # GET DATA
       data <- data()
       spatres <- spatres()
+
       if (nrow(data) != 0  && spatres == "City" ) {
 
-        # SET VAR
-        varname <- varname()
-        varval <- data[[varname]]
+        # SET VAR ITEMS
+        vnm <- varname()
+        varval <- data[[vnm]]
 
         # SET RADIUS
         radius <- log(varval)
         # radius <- sqrt(varval)
         # radius <- ~ifelse(input$map_zoom >= 7, 20+log(AREA_KM2), log(AREA_KM2))
 
-        # SET PAL
         # SET LEGEND
+        outcome_tag <- ifelse(vnm=="af","Excess fraction of deaths", # A.F
+                              ifelse(vnm=="an","Excess deaths", # A.N
+                                     ifelse(vnm=="rate","Excess mortality rate", NA)))
+        legTitle <- htmltools::HTML(paste0("<b>",outcome_tag,"</b>"), .noWS="outside")
+
+        # SET PAL
+        # load outcome variable data and temperature mode inp_map_R$rang
+        tempr <- temp()
+
+        # conditional palette
+        if (tempr == "heat") {
+          palcol = "Reds"
+        } else if (tempr == "cold") {
+          palcol = "Blues"
+        } else if (tempr == "tot") {
+          palcol= "viridis"
+        }
+
+        # unique data values
+        uvln <- length(unique(varval))
+
+        if (uvln <= 8) {
+          pal <- colorFactor(palette = palcol, domain = as.factor(varval), na.color = "transparent")
+          pal_colors <- unique(pal(sort(varval))) # hex codes
+          pal_labs <- paste(sort(unique(varval))) # first lag is NA
+
+        } else if (vnm == "an") {
+
+          pal <- colorQuantile(palette = palcol, domain = varval, probs = seq(0, 1, .2), na.color = "transparent")
+          pal_colors <- unique(pal(sort(varval))) # hex codes
+          pal_labs <- round(quantile(varval, seq(0, 1, .2)),0) # depends on n from pal
+          pal_labs <- paste(dplyr::lag(pal_labs), pal_labs, sep = " - ")[-1] # first lag is NA
+
+        } else {
+          pal <- leaflet::colorBin(palette = palcol, varval, bins = 7, na.color = "transparent")
+          pal_colors <- unique(pal(sort(varval))) # hex codes
+          pal_labs <- levels(
+            cut(x=varval,breaks=length(pal_colors),  include.lowest=FALSE, right=FALSE)
+          )
+          brkpts <- paste0(gsub("\\[|\\]|\\(|\\)", "", pal_labs),collapse=",") %>%
+            strsplit(.,",") %>% unlist() %>% unique(.)
+          pal_labs <- paste(dplyr::lag(brkpts),brkpts,sep = " - ")[-1]
+        }
 
         # create OR update markers
         if (!is.null(rv$markers)) {
@@ -76,18 +123,23 @@ mod_map_city_server <- function(id, data, spatres, varname){
                 textsize = "13px",
                 direction = "auto"
               ),
-              #radius = ~ifelse(input$map_zoom >= 7, 20+log(AREA_KM2), log(AREA_KM2)),
-              #radius = ~sqrt(data[[varname()]]),
               radius=radius,
-              #radius = 10,
               stroke=TRUE,
               color="black",
               weight=1,
               fill=TRUE,
               fillOpacity = fillOp_marker,
-              #fillColor = ~pal(varval)
-              fillColor = radius
-            )# addLegend
+              fillColor = ~pal(varval)
+            ) %>% clearControls() %>%
+            addLegend(
+              position="bottomleft",
+              colors = pal_colors, labels = pal_labs, opacity = 1,
+              title = legTitle
+              #pal=pal,
+              #values = varval, #if (varname == "an") q_breaks else var,
+              #,
+              #labFormat = labFormatFunction
+            )
         } else {
           # initial launch
           leafletProxy("map") %>%

@@ -56,14 +56,14 @@ app_server <- function(input, output, session) {
 
   observe({
 
-    spatres <- inp_map_L$spatres()
+    sr = inp_map_L$spatres()
 
-    if (inp_map_L$spatres() == "City") {
-      mod_map_city_server("map", data = map_data, spatres = inp_map_L$spatres, varname = inp_map_L$varselect)
-      } else if (inp_map_L$spatres() == "Country") {
-        mod_map_country_server("map", data = map_data, spatres = inp_map_L$spatres, varname = inp_map_L$varselect)
-      } else if(inp_map_L$spatres() == "Region") {
-        mod_map_region_server("map", data = map_data, spatres = inp_map_L$spatres, varname = inp_map_L$varselect)
+    if (sr == "City") {
+      mod_map_city_server("map", data = map_data, spatres = inp_map_L$spatres, varname = inp_map_L$varselect, temp = inp_map_R$rang)
+      } else if (sr == "Country") {
+        mod_map_country_server("map", data = map_data, spatres = inp_map_L$spatres, varname = inp_map_L$varselect , temp = inp_map_R$rang)
+      } else if(sr == "Region") {
+        mod_map_region_server("map", data = map_data, spatres = inp_map_L$spatres, varname = inp_map_L$varselect , temp = inp_map_R$rang)
       }
 
   })

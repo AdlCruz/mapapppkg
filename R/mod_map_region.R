@@ -1,12 +1,12 @@
-#' map_country Server Functions
+#' map_region Server Functions
 #'
 #' @noRd
-mod_map_region_server <- function(id, data, spatres, varname){
+mod_map_region_server <- function(id, data, spatres, varname, temp){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
     # RVS MARKERS POLYGONS SHOWN LOCATIONS
-    rv <- reactiveValues(lastCountryCount = 0, polygonsr = NULL)
+    rv <- reactiveValues(lastRegion = 0, polygonsr = NULL)
 
     fillOp_poly <- 0.4
 
@@ -42,21 +42,68 @@ mod_map_region_server <- function(id, data, spatres, varname){
 
     # OBS FOR MARKER DRAWING AND FILLING AND LEGEND AND PALETTE BUILDING AND TITLING
     observe({
+
       # GET DATA
       data <- data()
       spatres <- spatres()
-      if (nrow(data) != 0 && spatres == "Region") {
-        # SET VAR
-        varname <- varname()
-        varval <- data[[varname]]
+
+      if (nrow(data) != 0  && spatres == "Region" ) {
+
+        # SET VAR ITEMS
+        vnm <- varname()
+        varval <- data[[vnm]]
+
         # SET RADIUS
         radius <- log(varval)
         # radius <- sqrt(varval)
         # radius <- ~ifelse(input$map_zoom >= 7, 20+log(AREA_KM2), log(AREA_KM2))
-        # SET PAL
-        # SET LEGEND
 
-        data <- data
+        # SET LEGEND
+        outcome_tag <- ifelse(vnm=="af","Excess fraction of deaths", # A.F
+                              ifelse(vnm=="an","Excess deaths", # A.N
+                                     ifelse(vnm=="rate","Excess mortality rate", NA)))
+        legTitle <- htmltools::HTML(paste0("<b>",outcome_tag,"</b>"), .noWS="outside")
+
+        # SET PAL
+        # load outcome variable data and temperature mode inp_map_R$rang
+        tempr <- temp()
+
+        # conditional palette
+        if (tempr == "heat") {
+          palcol = "Reds"
+        } else if (tempr == "cold") {
+          palcol = "Blues"
+        } else if (tempr == "tot") {
+          palcol= "viridis"
+        }
+
+        # unique data values
+        uvln <- length(unique(varval))
+
+        if (uvln <= 8) {
+          pal <- colorFactor(palette = palcol, domain = as.factor(varval), na.color = "transparent")
+          pal_colors <- unique(pal(sort(varval))) # hex codes
+          pal_labs <- paste(sort(unique(varval))) # first lag is NA
+
+        } else if (vnm == "an") {
+
+          pal <- colorQuantile(palette = palcol, domain = varval, probs = seq(0, 1, .2), na.color = "transparent")
+          pal_colors <- unique(pal(sort(varval))) # hex codes
+          pal_labs <- round(quantile(varval, seq(0, 1, .2)),0) # depends on n from pal
+          pal_labs <- paste(dplyr::lag(pal_labs), pal_labs, sep = " - ")[-1] # first lag is NA
+
+        } else {
+
+          pal <- leaflet::colorBin(palette = palcol, varval, bins = 7, na.color = "transparent")
+          pal_colors <- unique(pal(sort(varval))) # hex codes
+          pal_labs <- levels(
+            cut(x=varval,breaks=length(pal_colors),  include.lowest=FALSE, right=FALSE)
+          )
+          brkpts <- paste0(gsub("\\[|\\]|\\(|\\)", "", pal_labs),collapse=",") %>%
+            strsplit(.,",") %>% unlist() %>% unique(.)
+          pal_labs <- paste(dplyr::lag(brkpts),brkpts,sep = " - ")[-1]
+
+        }
 
         # create update polygons
         if (!is.null(rv$polygonsr)) {
@@ -67,8 +114,7 @@ mod_map_region_server <- function(id, data, spatres, varname){
               color = "darkgrey",
               weight=2,
               fill=TRUE,
-              # fillColor=~pal(var),
-              fillColor="black",
+              fillColor=~pal(varval),
               fillOpacity = fillOp_poly,
               label = paste0("<b>",data$region,"<br>",
                              "Value: ",round(varval,3),"</b>") %>%
@@ -79,14 +125,13 @@ mod_map_region_server <- function(id, data, spatres, varname){
                 direction = "auto"
               )
             ) %>%
-            clearControls() #%>%
-          # addLegend(
-          #   position="bottomleft",
-          #   pal=pal,
-          #   values=var,
-          #   title= legTitle,
-          #   labFormat = labFormatFunction
-          # )
+            clearControls() %>%
+            addLegend(
+              position="bottomleft",
+              colors = pal_colors,
+              labels = pal_labs,
+              title= legTitle
+            )
         } else {
           # initial launch
           leafletProxy("map") %>%
