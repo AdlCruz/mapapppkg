@@ -43,9 +43,7 @@ utils_get_set_pal <- function(varval, vnm, palcol, qmax=5, bmax=7, factbin=8) {
     }
     # if none of that works use colorBin - if necessary can implement valid bin search via loop
     # would be slightly diff than above - for now its never broken and i cannot see it mislabelling
-    # it probably could but, since we deal with fractions, there are many unique values
-
-    # wanna try anyway
+    # it probably could but, since we deal with fractions (when var not "an"), there are many unique values
 
     # we go straight to deifninfgthis, no checks - not idea
     pal <- leaflet::colorBin(palcol, domain=varval, bins = bmax, na.color="transparent" )
@@ -57,8 +55,6 @@ utils_get_set_pal <- function(varval, vnm, palcol, qmax=5, bmax=7, factbin=8) {
 
     # test for equal length and return
     if (test_cols_lab_eq(colors,labs)) {return(list(pal=pal,colors=colors, labs=labs))}
-
-    
 
     # if all values and methods fail don't break but do give up
     pal <- function(x){return("white")}
